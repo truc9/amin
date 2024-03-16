@@ -1,0 +1,1 @@
+export { Skeleton as Skeleton } from '@/components/skeleton'
