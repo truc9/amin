@@ -72,7 +72,7 @@ function Body() {
   }
 
   async function addPlayerIfNotExists() {
-    const players = await getPlayers();
+    let players = await getPlayers();
     if (!players?.find((p) => p.clerk_id === userId)) {
       try {
         await supabase
@@ -82,6 +82,7 @@ function Body() {
             name: user!.fullName,
           })
           .select();
+        players = await getPlayers();
       } catch (err) {
         console.log(err);
       }
