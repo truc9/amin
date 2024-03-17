@@ -19,7 +19,8 @@
     "react-dom": "^18",
     "react-icons": "^5.0.1",
     "react-spinners": "^0.13.8",
-    "react-toastify": "^10.0.5"
+    "react-toastify": "^10.0.5",
+    "zod": "^3.22.4"
   },
   "devDependencies": {
     "@types/node": "^20",

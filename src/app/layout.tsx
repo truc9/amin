@@ -1,34 +1,29 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import "./globals.css";
+import Link from "next/link";
+import { Poppins, Space_Grotesk } from "next/font/google";
 import { ClerkProvider, UserButton } from "@clerk/nextjs";
 import { ToastContainer } from "react-toastify";
 import { Suspense } from "react";
-import { Skeleton } from "@/components";
+import { LoadingSkeleton } from "@/components/loading-skeleton";
+import "react-toastify/dist/ReactToastify.css";
+import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
-
-function BigLoading() {
-  return (
-    <div className="bg-white flex flex-col gap-2">
-      <Skeleton />
-      <Skeleton />
-      <Skeleton />
-    </div>
-  );
-}
+const aminFont = Poppins({
+  subsets: ["latin"],
+  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
+});
 
 export const metadata: Metadata = {
   title: "amin",
-  description: "amin | I'm in anyway",
+  description: "amin",
 };
 
 function Navbar() {
   return (
-    <nav className="flex items-center justify-between bg-white px-2 h-16 shadow">
-      <h3 className="text-lg font-bold flex items-center gap-2 text-green-500">
-        AMIN
-      </h3>
+    <nav className="flex items-center justify-between bg-slate-200 px-2 h-16">
+      <Link href="/" className="text-2xl font-bold flex items-center gap-2">
+        amin 🙋
+      </Link>
       <div>
         <UserButton afterSignOutUrl="/" />
       </div>
@@ -44,10 +39,10 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en">
-        <body className={inter.className}>
+        <body className={aminFont.className}>
           <main className="flex min-h-screen flex-col">
             <Navbar />
-            <Suspense fallback={<BigLoading />}>{children}</Suspense>
+            <Suspense fallback={<LoadingSkeleton />}>{children}</Suspense>
           </main>
           <ToastContainer position="bottom-right" stacked />
         </body>
