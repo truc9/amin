@@ -8,7 +8,7 @@ import { IoSend } from "react-icons/io5";
 import { LoadingSkeleton } from "@/components/loading-skeleton";
 import { createClient } from "@/utils/supabase/client";
 import { useUser } from "@clerk/nextjs";
-import { permanentRedirect, redirect } from "next/navigation";
+import { redirect } from "next/navigation";
 import { toast } from "react-toastify";
 
 export default function Page() {
@@ -31,7 +31,7 @@ export default function Page() {
       })
       .select();
     if (res.status == 201) {
-      permanentRedirect("/");
+      redirect("/");
     }
   }
 

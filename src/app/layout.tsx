@@ -1,13 +1,17 @@
 import type { Metadata } from "next";
-import { Roboto_Flex } from "next/font/google";
-import "./globals.css";
+import Link from "next/link";
+import { Poppins, Space_Grotesk } from "next/font/google";
 import { ClerkProvider, UserButton } from "@clerk/nextjs";
 import { ToastContainer } from "react-toastify";
 import { Suspense } from "react";
-import Link from "next/link";
 import { LoadingSkeleton } from "@/components/loading-skeleton";
+import "react-toastify/dist/ReactToastify.css";
+import "./globals.css";
 
-const aminFont = Roboto_Flex({ subsets: ["latin"] });
+const aminFont = Poppins({
+  subsets: ["latin"],
+  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
+});
 
 export const metadata: Metadata = {
   title: "amin",
@@ -16,12 +20,9 @@ export const metadata: Metadata = {
 
 function Navbar() {
   return (
-    <nav className="flex items-center justify-between bg-white px-2 h-16 shadow">
-      <Link
-        href="/"
-        className="text-lg font-bold flex items-center gap-2 text-green-500"
-      >
-        AMIN
+    <nav className="flex items-center justify-between bg-slate-200 px-2 h-16">
+      <Link href="/" className="text-2xl font-bold flex items-center gap-2">
+        amin 🙋
       </Link>
       <div>
         <UserButton afterSignOutUrl="/" />
@@ -39,7 +40,7 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <body className={aminFont.className}>
-          <main className="flex min-h-screen flex-col bg-slate-100">
+          <main className="flex min-h-screen flex-col">
             <Navbar />
             <Suspense fallback={<LoadingSkeleton />}>{children}</Suspense>
           </main>

@@ -1,12 +1,14 @@
-import { createClient } from "@/utils/supabase/server";
-import { currentUser } from "@clerk/nextjs/server";
 import Link from "next/link";
-import { IoAdd, IoChevronForward } from "react-icons/io5";
-import { Suspense, use, useEffect } from "react";
-import { PageContainer } from "@/components/page-container";
-import { LoadingSkeleton } from "@/components/loading-skeleton";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
+import { createClient } from "@/utils/supabase/server";
+import { currentUser } from "@clerk/nextjs/server";
+import { IoAdd, IoChevronForward } from "react-icons/io5";
+import { Suspense, use } from "react";
+import { PageContainer } from "@/components/page-container";
+import { LoadingSkeleton } from "@/components/loading-skeleton";
+import { LinkButton } from "@/components";
+
 dayjs.extend(relativeTime);
 
 export default function Page() {
@@ -15,56 +17,76 @@ export default function Page() {
   const { data: player } = use(
     supabase.from("players").select("id").eq("clerk_id", user?.id).maybeSingle()
   );
-  const { data: joinedGroups } = use(getJoinedGroups(player?.id));
-  const { data: myGroups } = use(getMyGroups(player?.id));
+  const invitedGroups = use(getInvitedGroups(player?.id));
+  const myGroups = use(getMyGroups(player?.id));
 
-  function getMyGroups(playerId: number) {
-    return supabase
+  async function getMyGroups(playerId: number) {
+    const res = await supabase
       .from("groups")
       .select()
       .eq("created_by", playerId)
       .order("created_at", { ascending: false });
+    return res.data;
   }
 
-  function getJoinedGroups(playerId: number) {
-    return supabase
+  async function getInvitedGroups(playerId: number) {
+    const groups = await supabase
       .from("player_groups")
       .select(
         `
-        id,
-        player_id,
-        group_id,
-        players(id, name),
-        groups(id, name),
-        created_at
-      `
+      groups(*)
+    `
       )
-      .eq("player_id", playerId)
-      .order("created_at", { ascending: false });
+      .eq("player_id", playerId);
+    const res = groups.data?.flatMap((g) => g.groups);
+    debugger;
+    return res;
   }
 
   return (
     <PageContainer>
-      <Link
+      <LinkButton
+        icon={<IoAdd />}
         href="/group/create"
-        className="bg-green-400 text-white px-2 py-3 rounded text-center flex items-center gap-2 justify-center"
-      >
-        <IoAdd size={20} />
-        <span>Create Group</span>
-      </Link>
+        label="Create Group"
+      ></LinkButton>
       <Suspense fallback={<LoadingSkeleton />}>
-        <h3 className="text-xl font-bold">My Groups</h3>
+        <h3 className="text-xl font-bold">Membership</h3>
         <div className="flex flex-col gap-3 bg-slate-100 h-full">
-          {myGroups?.map((group, index) => {
+          {invitedGroups?.map((group) => {
             return (
               <Link
                 href={`group/${group.id}`}
-                className="bg-green-50 border-green-500 border rounded p-4 flex justify-between items-center"
+                className="bg-green-50 border-green-500 border rounded p-4 flex justify-between items-center relative"
                 key={group.id}
               >
-                <span>
-                  {group.name} ({dayjs(group.created_at).fromNow()})
-                </span>
+                <div className="flex flex-col justify-start">
+                  <span className="font-bold">{group.name}</span>
+                  <span className="text-xs text-slate-500">
+                    {dayjs(group.created_at).fromNow()}
+                  </span>
+                </div>
+                <IoChevronForward size={20} />
+              </Link>
+            );
+          })}
+        </div>
+
+        <h3 className="text-xl font-bold">My Groups</h3>
+        <div className="flex flex-col gap-3 bg-slate-100 h-full">
+          {myGroups?.map((group) => {
+            return (
+              <Link
+                href={`group/${group.id}`}
+                className="bg-green-50 border-green-500 border rounded p-4 flex justify-between items-center relative"
+                key={group.id}
+              >
+                <div className="flex flex-col justify-start">
+                  <span className="font-bold">{group.name}</span>
+                  <span className="text-xs text-slate-500">
+                    {dayjs(group.created_at).fromNow()}
+                  </span>
+                </div>
                 <IoChevronForward size={20} />
               </Link>
             );

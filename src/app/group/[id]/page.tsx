@@ -7,12 +7,16 @@ import cn from "classnames";
 import { createClient } from "@/utils/supabase/client";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import { Skeleton } from "@/components";
+import { LinkButton, Skeleton } from "@/components";
+import { useParams } from "next/navigation";
+import { PageContainer } from "@/components/page-container";
+import { IoAdd, IoPeople, IoPerson } from "react-icons/io5";
+
 dayjs.extend(weekday);
 
-function GroupDetails() {
+export default function Page() {
   const client = createClient();
+  const { id: groupId } = useParams();
   const [players, setPlayers] = useState<any[] | null>();
   const { userId } = useAuth();
   const { user } = useUser();
@@ -58,16 +62,31 @@ function GroupDetails() {
   }
 
   async function getPlayers() {
-    const players = await client.from("players").select(`
+    const { data: groupPlayers } = await client
+      .from("player_groups")
+      .select("player_id")
+      .eq("group_id", groupId);
+
+    const { data } = await client
+      .from("players")
+      .select(
+        `
       id,
       name,
       clerk_id,
       player_registrations (
         id,
-        week_day
+        week_day,
+        group_id
       )
-    `);
-    return players.data;
+    `
+      )
+      .eq("player_registrations.group_id", groupId)
+      .in(
+        "id",
+        groupPlayers!.map((p) => p.player_id)
+      );
+    return data;
   }
 
   async function addPlayerIfNotExists() {
@@ -80,7 +99,9 @@ function GroupDetails() {
             clerk_id: userId,
             name: user!.fullName,
           })
-          .select();
+          .select()
+          .maybeSingle();
+
         players = await getPlayers();
       } catch (err) {
         console.log(err);
@@ -101,6 +122,7 @@ function GroupDetails() {
         await client.from("player_registrations").insert({
           player_id: playerId,
           week_day: d.toDate(),
+          group_id: groupId,
         });
         toast(`Come on ${d.format("ddd DD")}`);
       }
@@ -127,8 +149,12 @@ function GroupDetails() {
   }
 
   return (
-    <div className="flex flex-col items-center p-1 gap-3 my-3">
-      <span>{players?.length ?? 0} players</span>
+    <PageContainer>
+      <LinkButton
+        icon={<IoPeople />}
+        href={`/group/${groupId}/membership`}
+        label="Manage membership"
+      ></LinkButton>
       <div className="flex flex-col justify-start items-start w-full gap-1">
         {players &&
           players.map((player, i) => {
@@ -166,7 +192,7 @@ function GroupDetails() {
                         disabled={!mine}
                         onClick={() => handleSelectDay(day, registration?.id)}
                         className={cn(
-                          "h-full flex text-center justify-center items-center w-full rounded-lg ring-green-500",
+                          "border border-green-200 h-full flex text-center justify-center items-center w-full rounded-lg ring-green-500",
                           {
                             "active:ring-2 active:ring-green-500 active:ring-offset-2":
                               mine,
@@ -189,10 +215,6 @@ function GroupDetails() {
             );
           })}
       </div>
-    </div>
+    </PageContainer>
   );
-}
-
-export default function Page() {
-  return <GroupDetails />;
 }
