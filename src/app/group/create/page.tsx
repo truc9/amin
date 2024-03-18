@@ -1,11 +1,8 @@
 "use client";
 
 import React, { Suspense } from "react";
-import { Button } from "@/components/button";
-import { PageContainer } from "@/components/page-container";
-import { TextBox } from "@/components/textbox";
+import { Button, PageContainer, LoadingSkeleton, TextBox } from "@/components";
 import { IoSend } from "react-icons/io5";
-import { LoadingSkeleton } from "@/components/loading-skeleton";
 import { createClient } from "@/utils/supabase/client";
 import { useUser } from "@clerk/nextjs";
 import { redirect } from "next/navigation";

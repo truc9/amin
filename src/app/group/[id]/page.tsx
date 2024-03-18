@@ -7,10 +7,10 @@ import cn from "classnames";
 import { createClient } from "@/utils/supabase/client";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
-import { LinkButton, Skeleton } from "@/components";
+import { LinkButton, PageContainer, LoadingSkeleton } from "@/components";
 import { useParams } from "next/navigation";
-import { PageContainer } from "@/components/page-container";
-import { IoAdd, IoPeople, IoPerson } from "react-icons/io5";
+import { IoCalendar, IoPeople } from "react-icons/io5";
+import { getRegistrations } from "@/lib/player-service";
 
 dayjs.extend(weekday);
 
@@ -25,7 +25,6 @@ export default function Page() {
   }, [players, userId]);
 
   const weekStart = dayjs().weekday(8);
-  const weekEnd = weekStart.add(7);
   const weekDays = [0, 1, 2, 3, 4, 5, 6].map((item) => {
     const d = weekStart.add(item, "day");
     return d;
@@ -58,40 +57,12 @@ export default function Page() {
   }, [user, user?.fullName]);
 
   function handlePlayerRegistrations(payload: any) {
-    console.log(payload);
-  }
-
-  async function getPlayers() {
-    const { data: groupPlayers } = await client
-      .from("player_groups")
-      .select("player_id")
-      .eq("group_id", groupId);
-
-    const { data } = await client
-      .from("players")
-      .select(
-        `
-      id,
-      name,
-      clerk_id,
-      player_registrations (
-        id,
-        week_day,
-        group_id
-      )
-    `
-      )
-      .eq("player_registrations.group_id", groupId)
-      .in(
-        "id",
-        groupPlayers!.map((p) => p.player_id)
-      );
-    return data;
+    //TODO:
   }
 
   async function addPlayerIfNotExists() {
-    let players = await getPlayers();
-    if (!players?.find((p) => p.clerk_id === userId)) {
+    let registrations = await getRegistrations(+groupId, weekStart.toDate());
+    if (!registrations?.find((p) => p.clerk_id === userId)) {
       try {
         await client
           .from("players")
@@ -102,12 +73,12 @@ export default function Page() {
           .select()
           .maybeSingle();
 
-        players = await getPlayers();
+        registrations = await getRegistrations(+groupId, weekStart.toDate());
       } catch (err) {
         console.log(err);
       }
     }
-    setPlayers(players);
+    setPlayers(registrations);
   }
 
   async function handleSelectDay(d: dayjs.Dayjs, registrationId?: number) {
@@ -127,7 +98,7 @@ export default function Page() {
         toast(`Come on ${d.format("ddd DD")}`);
       }
 
-      const data = await getPlayers();
+      const data = await getRegistrations(+groupId, weekStart.toDate());
       setPlayers(data);
     } catch (err) {
       console.log(err);
@@ -139,13 +110,7 @@ export default function Page() {
   }
 
   if (pageLoading) {
-    return (
-      <div className="bg-white flex flex-col gap-2">
-        <Skeleton />
-        <Skeleton />
-        <Skeleton />
-      </div>
-    );
+    return <LoadingSkeleton />;
   }
 
   return (
@@ -155,6 +120,16 @@ export default function Page() {
         href={`/group/${groupId}/membership`}
         label="Manage membership"
       ></LinkButton>
+      <h3 className="text-xl font-bold">Calendar</h3>
+      <div className="flex items-center justify-between text-slate-500">
+        <h3>{weekStart.format("ddd DD.MM.YYYY")}</h3>
+        <h3>
+          <IoCalendar size={20} />
+        </h3>
+        <h3>{weekStart.add(6, "day").format("ddd DD.MM.YYYY")}</h3>
+      </div>
+
+      <h3 className="text-xl font-bold">Registrations</h3>
       <div className="flex flex-col justify-start items-start w-full gap-1">
         {players &&
           players.map((player, i) => {
@@ -206,7 +181,7 @@ export default function Page() {
                         )}
                         key={j}
                       >
-                        {day.format("ddd")}
+                        {day.format("ddd DD")}
                       </button>
                     );
                   })}

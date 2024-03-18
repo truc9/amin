@@ -1,13 +1,12 @@
 "use client";
 
-import { PageContainer } from "@/components/page-container";
+import { PageContainer, LoadingSkeleton } from "@/components";
 import { createClient } from "@/utils/supabase/client";
 import { useParams } from "next/navigation";
-import { Suspense, use, useEffect, useState } from "react";
+import { Suspense, use, useState } from "react";
 import { IoCheckmarkCircle } from "react-icons/io5";
 import { toast } from "react-toastify";
 import cn from "classnames";
-import { LoadingSkeleton } from "@/components/loading-skeleton";
 
 export default function Page() {
   const { id: groupId } = useParams();
@@ -47,6 +46,10 @@ export default function Page() {
         player_id: player.id,
         group_id: groupId,
       });
+      await supabase
+        .from("player_registrations")
+        .delete()
+        .eq("player_id", player.id);
       toast.error(`${player.name} removed`);
       setAddedPlayers(addedPlayers.filter((p) => p !== player.id));
     } else {
@@ -58,7 +61,7 @@ export default function Page() {
         })
         .select()
         .maybeSingle();
-      toast.success(`Added ${player.name} sucessfully`);
+      toast.success(`${player.name} added`);
       setAddedPlayers([...addedPlayers, player.id]);
     }
   }
@@ -67,7 +70,7 @@ export default function Page() {
     <PageContainer>
       <Suspense fallback={<LoadingSkeleton />}>
         <div className="flex flex-col gap-3">
-          {players?.map((p, i) => {
+          {players?.map((p) => {
             const added = addedPlayers?.includes(p.id);
             return (
               <button
