@@ -1,13 +1,12 @@
 "use client";
 
-import { PageContainer } from "@/components/page-container";
+import { PageContainer, LoadingSkeleton } from "@/components";
 import { createClient } from "@/utils/supabase/client";
 import { useParams } from "next/navigation";
 import { Suspense, use, useEffect, useState } from "react";
 import { IoCheckmarkCircle } from "react-icons/io5";
 import { toast } from "react-toastify";
 import cn from "classnames";
-import { LoadingSkeleton } from "@/components/loading-skeleton";
 
 export default function Page() {
   const { id: groupId } = useParams();

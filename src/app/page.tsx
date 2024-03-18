@@ -5,9 +5,7 @@ import { createClient } from "@/utils/supabase/server";
 import { currentUser } from "@clerk/nextjs/server";
 import { IoAdd, IoChevronForward } from "react-icons/io5";
 import { Suspense, use } from "react";
-import { PageContainer } from "@/components/page-container";
-import { LoadingSkeleton } from "@/components/loading-skeleton";
-import { LinkButton } from "@/components";
+import { LinkButton, PageContainer, LoadingSkeleton } from "@/components";
 
 dayjs.extend(relativeTime);
 

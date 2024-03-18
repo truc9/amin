@@ -7,9 +7,8 @@ import cn from "classnames";
 import { createClient } from "@/utils/supabase/client";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
-import { LinkButton, Skeleton } from "@/components";
+import { LinkButton, Skeleton, PageContainer } from "@/components";
 import { useParams } from "next/navigation";
-import { PageContainer } from "@/components/page-container";
 import { IoAdd, IoPeople, IoPerson } from "react-icons/io5";
 
 dayjs.extend(weekday);
