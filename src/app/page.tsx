@@ -1,96 +1,60 @@
-import Link from "next/link";
-import dayjs from "dayjs";
-import relativeTime from "dayjs/plugin/relativeTime";
-import { createClient } from "@/utils/supabase/server";
-import { currentUser } from "@clerk/nextjs/server";
-import { IoAdd, IoChevronForward } from "react-icons/io5";
-import { Suspense, use } from "react";
-import { LinkButton, PageContainer, LoadingSkeleton } from "@/components";
+"use client";
 
-dayjs.extend(relativeTime);
+import { Button, LoadingSkeleton, PageContainer } from "@/components";
+import { addPlayerIfNotExists } from "@/lib/player-service";
+import { useUser } from "@clerk/nextjs";
+import { IoLink } from "react-icons/io5";
+import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { createClient } from "@/utils/supabase/client";
 
 export default function Page() {
-  const supabase = createClient();
-  const user = use(currentUser());
-  const { data: player } = use(
-    supabase.from("players").select("id").eq("clerk_id", user?.id).maybeSingle()
-  );
-  const invitedGroups = use(getInvitedGroups(player?.id));
-  const myGroups = use(getMyGroups(player?.id));
+  const { isSignedIn, user } = useUser();
+  const client = createClient();
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
 
-  async function getMyGroups(playerId: number) {
-    const res = await supabase
-      .from("groups")
-      .select()
-      .eq("created_by", playerId)
-      .order("created_at", { ascending: false });
-    return res.data;
-  }
+  useEffect(() => {
+    if (isSignedIn && user) {
+      (async () => {
+        const res = await client
+          .from("players")
+          .select("id")
+          .eq("clerk_id", user?.id)
+          .maybeSingle();
+        if (res.data) {
+          router.push("/group");
+        }
+      })();
+    }
+  }, [isSignedIn, user]);
 
-  async function getInvitedGroups(playerId: number) {
-    const groups = await supabase
-      .from("player_groups")
-      .select(
-        `
-      groups(*)
-    `
-      )
-      .eq("player_id", playerId);
-    const res = groups.data?.flatMap((g) => g.groups);
-    debugger;
-    return res;
+  async function handleJoin() {
+    if (isSignedIn && user) {
+      await addPlayerIfNotExists(user.id!, user.fullName!);
+      router.push("/group");
+    }
   }
 
   return (
-    <PageContainer>
-      <LinkButton
-        icon={<IoAdd />}
-        href="/group/create"
-        label="Create Group"
-      ></LinkButton>
-      <Suspense fallback={<LoadingSkeleton />}>
-        <h3 className="text-xl font-bold">Membership</h3>
-        <div className="flex flex-col gap-3 bg-slate-100 h-full">
-          {invitedGroups?.map((group) => {
-            return (
-              <Link
-                href={`group/${group.id}`}
-                className="bg-green-50 border-green-500 border rounded p-4 flex justify-between items-center relative"
-                key={group.id}
-              >
-                <div className="flex flex-col justify-start">
-                  <span className="font-bold">{group.name}</span>
-                  <span className="text-xs text-slate-500">
-                    {dayjs(group.created_at).fromNow()}
-                  </span>
-                </div>
-                <IoChevronForward size={20} />
-              </Link>
-            );
-          })}
-        </div>
-
-        <h3 className="text-xl font-bold">My Groups</h3>
-        <div className="flex flex-col gap-3 bg-slate-100 h-full">
-          {myGroups?.map((group) => {
-            return (
-              <Link
-                href={`group/${group.id}`}
-                className="bg-green-50 border-green-500 border rounded p-4 flex justify-between items-center relative"
-                key={group.id}
-              >
-                <div className="flex flex-col justify-start">
-                  <span className="font-bold">{group.name}</span>
-                  <span className="text-xs text-slate-500">
-                    {dayjs(group.created_at).fromNow()}
-                  </span>
-                </div>
-                <IoChevronForward size={20} />
-              </Link>
-            );
-          })}
-        </div>
-      </Suspense>
-    </PageContainer>
+    <Suspense fallback={<LoadingSkeleton />}>
+      <PageContainer>
+        {loading ? (
+          <LoadingSkeleton />
+        ) : (
+          <>
+            <div className="text-lg">
+              <h3>Welcome to amin!</h3>
+              <small>Connect your friends and play badminton</small>
+            </div>
+            <Button
+              icon={<IoLink />}
+              label="Click to join"
+              onClick={handleJoin}
+            ></Button>
+          </>
+        )}
+      </PageContainer>
+    </Suspense>
   );
 }

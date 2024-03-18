@@ -38,3 +38,23 @@ export async function getRegistrations(groupId: number, startWeek: Date) {
         )
     return data
 }
+
+export async function addPlayerIfNotExists(clerkId: string, name: string) {
+    const client = createClient()
+    const player = await client
+        .from("players")
+        .select()
+        .eq("clerk_id", clerkId)
+        .maybeSingle()
+
+    if (!player.data) {
+        await client
+            .from("players")
+            .insert({
+                clerk_id: clerkId,
+                name: name,
+            })
+            .select()
+            .maybeSingle()
+    }
+}
