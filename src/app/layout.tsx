@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Poppins, Space_Grotesk } from "next/font/google";
+import { Inter } from "next/font/google";
 import { ClerkProvider, UserButton } from "@clerk/nextjs";
 import { ToastContainer } from "react-toastify";
 import { Suspense } from "react";
@@ -8,7 +8,7 @@ import { LoadingSkeleton } from "@/components/loading-skeleton";
 import "react-toastify/dist/ReactToastify.css";
 import "./globals.css";
 
-const aminFont = Poppins({
+const aminFont = Inter({
   subsets: ["latin"],
   weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
 });
