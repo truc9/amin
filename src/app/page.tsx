@@ -1,3 +1,4 @@
+import { LoadingSkeleton, PageContainer } from "@/components";
 import { addPlayerIfNotExists } from "@/lib/player-service";
 import { createClient } from "@/utils/supabase/server";
 import { currentUser } from "@clerk/nextjs";
@@ -27,5 +28,11 @@ export default async function Page() {
     redirect("/group");
   }
 
-  return <Suspense fallback={<span>Setup player...</span>}></Suspense>;
+  return (
+    <Suspense fallback={<LoadingSkeleton />}>
+      <PageContainer>
+        <h3 className="text-lg">Welcome to amin!</h3>
+      </PageContainer>
+    </Suspense>
+  );
 }

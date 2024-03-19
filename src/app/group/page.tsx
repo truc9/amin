@@ -1,22 +1,61 @@
+"use client";
+
 import Link from "next/link";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import { createClient } from "@/utils/supabase/server";
-import { currentUser } from "@clerk/nextjs/server";
+import { createClient } from "@/utils/supabase/client";
+import { useAuth } from "@clerk/nextjs";
 import { IoAdd, IoChevronForward } from "react-icons/io5";
-import { Suspense, use } from "react";
+import { Suspense, use, useEffect, useState } from "react";
 import { LinkButton, PageContainer, LoadingSkeleton } from "@/components";
-
 dayjs.extend(relativeTime);
 
 export default function Page() {
   const client = createClient();
-  const user = use(currentUser());
-  const { data: player } = use(
-    client.from("players").select("id").eq("clerk_id", user?.id).maybeSingle()
-  );
-  const invitedGroups = use(getInvitedGroups(player?.id));
-  const myGroups = use(getMyGroups(player?.id));
+  const { userId } = useAuth();
+  const [player, setPlayer] = useState<any>();
+  const [invitedGroups, setInvitedGroups] = useState<any[]>([]);
+  const [myGroups, setMyGroups] = useState<any[]>([]);
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  async function load() {
+    client
+      .channel("players")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "groups" },
+        handleGroupChange
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "groups" },
+        handleGroupChange
+      )
+      .subscribe();
+
+    const { data: player } = await client
+      .from("players")
+      .select("id")
+      .eq("clerk_id", userId)
+      .maybeSingle();
+    setPlayer(player);
+
+    const invitedGroups = await getInvitedGroups(player?.id);
+    if (invitedGroups) {
+      setInvitedGroups(invitedGroups);
+    }
+    const myGroups = await getMyGroups(player?.id);
+    if (myGroups) {
+      setMyGroups(myGroups);
+    }
+  }
+
+  async function handleGroupChange(payload: any) {
+    await load();
+  }
 
   async function getMyGroups(playerId: number) {
     const res = await client
