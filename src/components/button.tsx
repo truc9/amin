@@ -19,3 +19,4 @@ export const Button = forwardRef<Ref, Props>(
     </button>
   )
 );
+Button.displayName = "Button";
