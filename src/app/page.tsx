@@ -1,60 +1,45 @@
 "use client";
 
-import { Button, LoadingSkeleton, PageContainer } from "@/components";
+import { LoadingSkeleton, PageContainer } from "@/components";
 import { addPlayerIfNotExists } from "@/lib/player-service";
 import { useUser } from "@clerk/nextjs";
-import { IoLink } from "react-icons/io5";
 import { useRouter } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
+import { PulseLoader } from "react-spinners";
 
 export default function Page() {
   const { isSignedIn, user } = useUser();
   const client = createClient();
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (isSignedIn && user) {
       (async () => {
+        setLoading(true);
         const res = await client
           .from("players")
           .select("id")
           .eq("clerk_id", user?.id)
           .maybeSingle();
-        if (res.data) {
-          router.push("/group");
+        if (!res.data) {
+          await addPlayerIfNotExists(user.id!, user.fullName!);
         }
+        router.push("/group");
+        setLoading(false);
       })();
     }
   }, [isSignedIn, user]);
 
-  async function handleJoin() {
-    if (isSignedIn && user) {
-      await addPlayerIfNotExists(user.id!, user.fullName!);
-      router.push("/group");
-    }
-  }
-
   return (
-    <Suspense fallback={<LoadingSkeleton />}>
-      <PageContainer>
-        {loading ? (
-          <LoadingSkeleton />
-        ) : (
-          <>
-            <div className="text-lg">
-              <h3>Welcome to amin!</h3>
-              <small>Connect your friends and play badminton</small>
-            </div>
-            <Button
-              icon={<IoLink />}
-              label="Click to join"
-              onClick={handleJoin}
-            ></Button>
-          </>
-        )}
-      </PageContainer>
-    </Suspense>
+    <PageContainer>
+      <Suspense fallback={<LoadingSkeleton />}>
+        <div className="flex items-center justify-center flex-col gap-3 min-h-40">
+          <PulseLoader />
+          <h3>Adding you as a player...</h3>
+        </div>
+      </Suspense>
+    </PageContainer>
   );
 }
