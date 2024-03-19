@@ -31,22 +31,6 @@ export default function Page() {
   });
   const [pageLoading, setPageLoading] = useState(false);
 
-  //   useEffect(() => {
-  //     client
-  //       .channel("reg")
-  //       .on(
-  //         "postgres_changes",
-  //         { event: "INSERT", schema: "public", table: "player_registrations" },
-  //         handlePlayerRegistrations
-  //       )
-  //       .on(
-  //         "postgres_changes",
-  //         { event: "DELETE", schema: "public", table: "player_registrations" },
-  //         handlePlayerRegistrations
-  //       )
-  //       .subscribe();
-  //   }, []);
-
   useEffect(() => {
     setPageLoading(true);
     if (user?.fullName) {
@@ -55,9 +39,6 @@ export default function Page() {
       });
     }
   }, [user, user?.fullName]);
-
-  //   function handlePlayerRegistrations(payload: any) {
-  //   }
 
   async function addPlayerIfNotExists() {
     let registrations = await getRegistrations(+groupId, weekStart.toDate());

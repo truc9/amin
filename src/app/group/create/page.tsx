@@ -27,9 +27,7 @@ export default function Page() {
         created_by: player?.id,
       })
       .select();
-    if (res.status == 201) {
-      redirect("/");
-    }
+    window.location.href = "/group";
   }
 
   return (

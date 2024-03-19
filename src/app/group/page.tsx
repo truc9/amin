@@ -33,7 +33,6 @@ export default function Page() {
       .select("groups(*)")
       .eq("player_id", playerId);
     const res = groups.data?.flatMap((g) => g.groups);
-    debugger;
     return res;
   }
 
@@ -51,7 +50,7 @@ export default function Page() {
             return (
               <Link
                 href={`group/${group.id}`}
-                className="bg-green-50 border-green-500 border rounded p-4 flex justify-between items-center relative"
+                className="bg-rose-50 border-rose-500 border rounded p-4 flex justify-between items-center relative"
                 key={group.id}
               >
                 <div className="flex flex-col justify-start">
