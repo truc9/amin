@@ -18,10 +18,6 @@ export default function Page() {
   const [myGroups, setMyGroups] = useState<any[]>([]);
 
   useEffect(() => {
-    load();
-  }, []);
-
-  async function load() {
     client
       .channel("players")
       .on(
@@ -31,11 +27,19 @@ export default function Page() {
       )
       .on(
         "postgres_changes",
-        { event: "DELETE", schema: "public", table: "groups" },
+        { event: "INSERT", schema: "public", table: "player_groups" },
+        handleGroupChange
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "player_groups" },
         handleGroupChange
       )
       .subscribe();
+    load();
+  }, []);
 
+  async function load() {
     const { data: player } = await client
       .from("players")
       .select("id")
