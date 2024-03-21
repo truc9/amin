@@ -1,6 +1,6 @@
 "use client";
 
-import { UserButton, useAuth, useUser } from "@clerk/nextjs";
+import { UserButton, useAuth } from "@clerk/nextjs";
 import dayjs from "dayjs";
 import weekday from "dayjs/plugin/weekday";
 import cn from "classnames";
@@ -19,7 +19,6 @@ export default function Page() {
   const { id: groupId } = useParams();
   const [players, setPlayers] = useState<any[] | null>();
   const { userId } = useAuth();
-  const { user } = useUser();
   const playerId = useMemo(() => {
     return players?.find((p) => p.clerk_id == userId)?.id;
   }, [players, userId]);
@@ -32,34 +31,16 @@ export default function Page() {
   const [pageLoading, setPageLoading] = useState(false);
 
   useEffect(() => {
-    setPageLoading(true);
-    if (user?.fullName) {
-      addPlayerIfNotExists().then(() => {
-        setPageLoading(false);
-      });
-    }
-  }, [user, user?.fullName]);
+    load();
 
-  async function addPlayerIfNotExists() {
-    let registrations = await getRegistrations(+groupId, weekStart.toDate());
-    if (!registrations?.find((p) => p.clerk_id === userId)) {
-      try {
-        await client
-          .from("players")
-          .insert({
-            clerk_id: userId,
-            name: user!.fullName,
-          })
-          .select()
-          .maybeSingle();
-
-        registrations = await getRegistrations(+groupId, weekStart.toDate());
-      } catch (err) {
-        console.log(err);
-      }
+    async function load() {
+      const registrations = await getRegistrations(
+        Number(groupId),
+        weekStart.toDate()
+      );
+      setPlayers(registrations);
     }
-    setPlayers(registrations);
-  }
+  }, [groupId, weekStart]);
 
   async function handleSelectDay(d: dayjs.Dayjs, registrationId?: number) {
     try {
@@ -78,14 +59,12 @@ export default function Page() {
         toast(`Come on ${d.format("ddd DD")}`);
       }
 
-      const data = await getRegistrations(+groupId, weekStart.toDate());
+      const data = await getRegistrations(Number(groupId), weekStart.toDate());
       setPlayers(data);
     } catch (err) {
-      console.log(err);
       toast.error(
         "Oops! can not register now, contact developer for fixing this shit!"
       );
-    } finally {
     }
   }
 

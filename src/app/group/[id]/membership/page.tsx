@@ -12,7 +12,6 @@ export default function Page() {
   const { id: groupId } = useParams();
   const supabase = createClient();
   const [players, setPlayers] = useState<any[]>([]);
-  const [groupPlayers, setGroupPlayers] = useState<any[]>([]);
   const [addedPlayers, setAddedPlayers] = useState<number[]>([]);
 
   useEffect(() => {
@@ -46,9 +45,6 @@ export default function Page() {
       setPlayers(players!);
     }
     const groupPlayers = await getGroupPlayers();
-    if (groupPlayers) {
-      setGroupPlayers(groupPlayers);
-    }
     setAddedPlayers(groupPlayers!.map((gp) => gp.player_id));
   }
 

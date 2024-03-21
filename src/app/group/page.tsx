@@ -47,10 +47,11 @@ export default function Page() {
       .maybeSingle();
     setPlayer(player);
 
-    const invitedGroups = await getInvitedGroups(player?.id);
+    const invitedGroups = await getJoinedGroups(player?.id);
     if (invitedGroups) {
       setInvitedGroups(invitedGroups);
     }
+
     const myGroups = await getMyGroups(player?.id);
     if (myGroups) {
       setMyGroups(myGroups);
@@ -70,7 +71,7 @@ export default function Page() {
     return res.data;
   }
 
-  async function getInvitedGroups(playerId: number) {
+  async function getJoinedGroups(playerId: number) {
     const groups = await client
       .from("player_groups")
       .select("groups(*)")

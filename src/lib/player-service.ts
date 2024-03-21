@@ -17,18 +17,16 @@ export async function getRegistrations(groupId: number, startWeek: Date) {
     // get all players of this group & their's registrations
     const { data } = await client
         .from("players")
-        .select(
-            `
-      id,
-      name,
-      clerk_id,
-      player_registrations (
-        id,
-        week_day,
-        group_id
-      )
-    `
-        )
+        .select(`
+            id,
+            name,
+            clerk_id,
+            player_registrations (
+                id,
+                week_day,
+                group_id
+            )
+        `)
         .eq("player_registrations.group_id", groupId)
         .gte("player_registrations.week_day", dayjs(startWeek).format('YYYY-MM-DD'))
         .lte("player_registrations.week_day", dayjs(startWeek).add(6, 'day').format('YYYY-MM-DD'))
@@ -39,6 +37,11 @@ export async function getRegistrations(groupId: number, startWeek: Date) {
     return data
 }
 
+/**
+ * When user logging in, added user as a player
+ * @param clerkId identity server ID (ClerkID)
+ * @param name user name
+ */
 export async function addPlayerIfNotExists(clerkId: string, name: string) {
     const client = createClient()
     const player = await client
@@ -57,4 +60,12 @@ export async function addPlayerIfNotExists(clerkId: string, name: string) {
             .select()
             .maybeSingle()
     }
+}
+
+export async function unregister(registrationId: number) {
+    const client = createClient()
+    await client
+        .from("player_registrations")
+        .delete()
+        .eq("id", registrationId)
 }
