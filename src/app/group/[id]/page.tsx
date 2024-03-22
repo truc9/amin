@@ -4,18 +4,16 @@ import { UserButton, useAuth } from "@clerk/nextjs";
 import dayjs from "dayjs";
 import weekday from "dayjs/plugin/weekday";
 import cn from "classnames";
-import { createClient } from "@/utils/supabase/client";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import { LinkButton, PageContainer, LoadingSkeleton } from "@/components";
 import { useParams } from "next/navigation";
 import { IoCalendar, IoPeople } from "react-icons/io5";
-import { getRegistrations } from "@/lib/player-service";
+import { getRegistrations, register, unregister } from "@/lib/player-service";
 
 dayjs.extend(weekday);
 
 export default function Page() {
-  const client = createClient();
   const { id: groupId } = useParams();
   const [players, setPlayers] = useState<any[] | null>();
   const { userId } = useAuth();
@@ -28,34 +26,26 @@ export default function Page() {
     const d = weekStart.add(item, "day");
     return d;
   });
-  const [pageLoading, setPageLoading] = useState(false);
 
   useEffect(() => {
-    load();
+    loadRegistrations();
 
-    async function load() {
+    async function loadRegistrations() {
       const registrations = await getRegistrations(
         Number(groupId),
         weekStart.toDate()
       );
       setPlayers(registrations);
     }
-  }, [groupId, weekStart]);
+  }, []);
 
   async function handleSelectDay(d: dayjs.Dayjs, registrationId?: number) {
     try {
       if (registrationId) {
-        await client
-          .from("player_registrations")
-          .delete()
-          .eq("id", registrationId);
+        await unregister(registrationId);
         toast(`Not comming on ${d.format("ddd DD")}`);
       } else {
-        await client.from("player_registrations").insert({
-          player_id: playerId,
-          week_day: d.toDate(),
-          group_id: groupId,
-        });
+        await register(Number(groupId), playerId, d.toDate());
         toast(`Come on ${d.format("ddd DD")}`);
       }
 
@@ -66,10 +56,6 @@ export default function Page() {
         "Oops! can not register now, contact developer for fixing this shit!"
       );
     }
-  }
-
-  if (pageLoading) {
-    return <LoadingSkeleton />;
   }
 
   return (

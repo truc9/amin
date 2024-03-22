@@ -7,16 +7,23 @@ import { useEffect, useState } from "react";
 import { IoCheckmarkCircle } from "react-icons/io5";
 import { toast } from "react-toastify";
 import cn from "classnames";
+import {
+  addPlayerToGroup,
+  checkPlayerExistInGroup,
+  getGroupPlayers,
+  getPlayers,
+  removePlayerFromGroup,
+} from "@/lib/player-service";
 
 export default function Page() {
   const { id: groupId } = useParams();
-  const supabase = createClient();
+  const client = createClient();
   const [players, setPlayers] = useState<any[]>([]);
   const [addedPlayers, setAddedPlayers] = useState<number[]>([]);
 
   useEffect(() => {
     load();
-    supabase
+    client
       .channel("players")
       .on(
         "postgres_changes",
@@ -44,54 +51,18 @@ export default function Page() {
     if (players) {
       setPlayers(players!);
     }
-    const groupPlayers = await getGroupPlayers();
+    const groupPlayers = await getGroupPlayers(+groupId);
     setAddedPlayers(groupPlayers!.map((gp) => gp.player_id));
   }
 
-  //TODO: left join rather than 2 queries?
-  async function getPlayers() {
-    const { data } = await supabase.from("players").select();
-    return data;
-  }
-
-  async function getGroupPlayers() {
-    const { data } = await supabase
-      .from("player_groups")
-      .select()
-      .eq("group_id", groupId);
-    return data;
-  }
-
   async function addOrRemovePlayer(player: any) {
-    const existing = await supabase
-      .from("player_groups")
-      .select("id")
-      .match({
-        player_id: player.id,
-        group_id: groupId,
-      })
-      .maybeSingle();
-
-    if (!!existing.data) {
-      await supabase.from("player_groups").delete().match({
-        player_id: player.id,
-        group_id: groupId,
-      });
-      await supabase
-        .from("player_registrations")
-        .delete()
-        .eq("player_id", player.id);
+    const existing = await checkPlayerExistInGroup(+groupId, player.id);
+    if (!!existing) {
+      removePlayerFromGroup(+groupId, player.id);
       toast.error(`${player.name} removed`);
       setAddedPlayers(addedPlayers.filter((p) => p !== player.id));
     } else {
-      await supabase
-        .from("player_groups")
-        .insert({
-          player_id: player.id,
-          group_id: groupId,
-        })
-        .select()
-        .maybeSingle();
+      addPlayerToGroup(+groupId, player.id);
       toast.success(`${player.name} added`);
       setAddedPlayers([...addedPlayers, player.id]);
     }
