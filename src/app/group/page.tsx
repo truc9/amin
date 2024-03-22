@@ -6,16 +6,17 @@ import relativeTime from "dayjs/plugin/relativeTime";
 import { createClient } from "@/utils/supabase/client";
 import { useAuth } from "@clerk/nextjs";
 import { IoAdd, IoChevronForward } from "react-icons/io5";
-import { Suspense, use, useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { LinkButton, PageContainer, LoadingSkeleton } from "@/components";
+
 dayjs.extend(relativeTime);
 
 export default function Page() {
   const client = createClient();
   const { userId } = useAuth();
-  const [player, setPlayer] = useState<any>();
   const [invitedGroups, setInvitedGroups] = useState<any[]>([]);
   const [myGroups, setMyGroups] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     client
@@ -40,12 +41,12 @@ export default function Page() {
   }, []);
 
   async function load() {
+    setLoading(true);
     const { data: player } = await client
       .from("players")
       .select("id")
       .eq("clerk_id", userId)
       .maybeSingle();
-    setPlayer(player);
 
     const invitedGroups = await getJoinedGroups(player?.id);
     if (invitedGroups) {
@@ -56,6 +57,7 @@ export default function Page() {
     if (myGroups) {
       setMyGroups(myGroups);
     }
+    setLoading(false);
   }
 
   async function handleGroupChange(payload: any) {
@@ -82,15 +84,19 @@ export default function Page() {
 
   return (
     <PageContainer>
-      <LinkButton
-        icon={<IoAdd />}
-        href="/group/create"
-        label="Create Group"
-      ></LinkButton>
-      <Suspense fallback={<LoadingSkeleton />}>
-        <h3 className="text-xl font-bold">Membership</h3>
-        <div className="flex flex-col gap-3 bg-slate-100 h-full">
-          {invitedGroups?.map((group) => {
+      <div className="flex w-full lg:justify-start lg:items-start">
+        <LinkButton
+          icon={<IoAdd />}
+          href="/group/create"
+          label="Create Group"
+        ></LinkButton>
+      </div>
+      <h3 className="text-xl font-bold">Membership</h3>
+      <div className="flex flex-col gap-3 bg-slate-100 h-full">
+        {loading ? (
+          <LoadingSkeleton />
+        ) : (
+          invitedGroups?.map((group) => {
             return (
               <Link
                 href={`group/${group.id}`}
@@ -106,12 +112,16 @@ export default function Page() {
                 <IoChevronForward size={20} />
               </Link>
             );
-          })}
-        </div>
+          })
+        )}
+      </div>
 
-        <h3 className="text-xl font-bold">My Groups</h3>
-        <div className="flex flex-col gap-3 bg-slate-100 h-full">
-          {myGroups?.map((group) => {
+      <h3 className="text-xl font-bold">My Groups</h3>
+      <div className="flex flex-col gap-3 bg-slate-100 h-full">
+        {loading ? (
+          <LoadingSkeleton />
+        ) : (
+          myGroups?.map((group) => {
             return (
               <Link
                 href={`group/${group.id}`}
@@ -127,9 +137,9 @@ export default function Page() {
                 <IoChevronForward size={20} />
               </Link>
             );
-          })}
-        </div>
-      </Suspense>
+          })
+        )}
+      </div>
     </PageContainer>
   );
 }

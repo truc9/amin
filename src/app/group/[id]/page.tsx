@@ -6,7 +6,7 @@ import weekday from "dayjs/plugin/weekday";
 import cn from "classnames";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
-import { LinkButton, PageContainer, LoadingSkeleton } from "@/components";
+import { LinkButton, PageContainer } from "@/components";
 import { useParams } from "next/navigation";
 import { IoCalendar, IoPeople } from "react-icons/io5";
 import { getRegistrations, register, unregister } from "@/lib/player-service";
